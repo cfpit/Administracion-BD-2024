@@ -170,4 +170,43 @@ select * from librosautores
 
 drop view librosautores
 
+-- Expresion CASE
+--67.listar el nombre de los productos, el nombre de la subcategoria a la que pertenece junto a su categoría de precio. La categoría de precio se calcula de la siguiente manera.
+--	-si el precio está entre 0 y 1000 la categoría es económica.
+--	-si la categoría está entre 1000 y 2000, normal 
+--	-y si su valor es mayor a 2000 la categoría es cara. 
+use [AdventureWorks]
+
+select		p.Name as Producto,
+			ps.Name as Subcategoria,
+			p.ListPrice as Precio,
+			case 
+				when ListPrice < 1000 then 'Economica'
+				when ListPrice between 1000 and 2000 then 'Normal'
+				when ListPrice > 2000 then 'Cara'
+				else 'Sin Categorizar'
+			end as Categoria
+from		Production.Product p
+inner join	Production.ProductSubcategory ps
+on			ps.ProductSubcategoryID = p.ProductSubcategoryID
+
+--68.tomando el ejercicio anterior, mostrar unicamente aquellos productos cuya categoria sea "economica"
+SELECT		*
+FROM		(
+				select		p.Name as Producto,
+							ps.Name as Subcategoria,
+							p.ListPrice as Precio,
+							case 
+								when ListPrice < 1000 then 'Economica'
+								when ListPrice between 1000 and 2000 then 'Normal'
+								when ListPrice > 2000 then 'Cara'
+								else 'Sin Categorizar'
+							end as Categoria
+				from		Production.Product p
+				inner join	Production.ProductSubcategory ps
+				on			ps.ProductSubcategoryID = p.ProductSubcategoryID
+			) as miSubconsulta
+WHERE		miSubconsulta.Categoria = 'Economica'
+
+
 
