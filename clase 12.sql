@@ -1,14 +1,163 @@
+-- 69:aumentar un 20% el precio de lista de todos los productos  
+UPDATE	Production.Product
+SET		ListPrice = ListPrice * 1.2
+
+					
+
+
+-- 70:aumentar un 20% el precio de lista de los productos del proveedor 1540 
+UPDATE	Production.Product 
+SET		ListPrice = ListPrice * 1.2
+FROM	Production.Product p
+INNER JOIN Purchasing.ProductVendor v ON p.ProductID = v.ProductID 
+WHERE	 v.BusinessEntityID = 1540
+
+SELECT		ListPrice as Precio
+FROM		Production.Product p
+INNER JOIN	Purchasing.ProductVendor v ON p.ProductID = v.ProductID 
+WHERE		v.BusinessEntityID = 1540
+
+
+
+-- 71:agregar un dia de vacaciones a los 10 empleados con mayor antiguedad.
+UPDATE HumanResources.Employee
+SET VacationHours = VacationHours + 24
+FROM (SELECT TOP 10 BusinessEntityID FROM HumanResources.Employee
+     ORDER BY HireDate ASC) AS miSubconsulta
+WHERE HumanResources.Employee.BusinessEntityID = miSubconsulta.BusinessEntityID;
+
+--verificacion
+SELECT TOP 10	VacationHours,*
+FROM			HumanResources.Employee e
+ORDER BY		HireDate asc
+
+
+
+
+-- 72: eliminar los detalles de compra (purchaseorderdetail) cuyas fechas de 
+VENCIMIENTO PERTENEZCAN AL TERCER TRIMESTRE DEL AÑO 2006 
+DELETE  
+FROM Purchasing.PurchaseOrderDetail
+WHERE MONTH(DueDate) between 7 and 9 and YEAR(DueDate)=2006; 
+
+
+
+-- 73:quitar registros de la tabla salespersonquotahistory cuando las ventas del año hasta la fecha 
+--almacenadas en la tabla salesperson supere el valor de 2500000
+
+DELETE FROM Sales.SalesPersonQuotaHistory 
+FROM		Sales.SalesPersonQuotaHistory AS spqh
+INNER JOIN	Sales.SalesPerson AS sp
+ON			spqh.BusinessEntityID = sp.BusinessEntityID
+WHERE		sp.SalesYTD > 2500000.00;
+
+
+
+
+-- bulk copy
+
+-- 74: clonar estructura y datos de los campos nombre ,color y precio de lista de la tabla production.product en una tabla llamada productos 
+
+SELECT	Color,Name,ListPrice
+INTO	productos
+FROM	Production.Product
+
+SELECT * from productos
+
+
+
+
+-- 75: clonar solo estructura de los campos identificador ,nombre y apellido de la tabla person.person en una tabla llamada personas 
+
+SELECT	BusinessEntityID,FirstName,LastName
+INTO	personas
+FROM	Person.Person
+WHERE	1=2
+
+--drop table dbo.personas
+--drop table dbo.productos
+
+
+
+-- 76:insertar un producto dentro de la tabla productos.tener en cuenta los siguientes 
+--datos: el color de producto debe ser rojo, el nombre debe ser "bicicleta mountain bike" y el precio de lista debe ser de 4000 pesos.
+
+INSERT INTO		productos(Color,Name,ListPrice)
+VALUES			('Rojo','Bicicleta Mountain Bike',4000)
+
+select * from productos
+
+
+
+-- 77: copiar los registros de la tabla person.person a la tabla personas cuyo identificador este entre 100 y 200 
+
+INSERT INTO	personas
+SELECT		BusinessEntityID,FirstName,LastName
+FROM		Person.Person
+WHERE		BusinessEntityID BETWEEN 100 AND 200
+
+select * from personas
+
+
+
+
+-- 78: aumentar en un 15% el precio de los pedales de bicicleta 
+
+ UPDATE productos 
+ SET ListPrice=ListPrice*1.15
+ WHERE name like'%pedal%'
+ 
+ -- verificacion  
+ SELECT	* 
+ FROM	productos 
+ WHERE	name like'%pedal%'
+ 
+ 
+
+
+-- 79: eliminar de las personas cuyo nombre empiecen con la letra m
+
+DELETE	FROM personas 
+WHERE	firstname like 'm%'
+
+--verificacion
+select	*
+FROM	personas 
+WHERE	FirstName like 'm%'
+
+
+
+
+-- 80: borrar todo el contenido de la tabla productos 
+
+DELETE	
+FROM	productos
+
+--verificacion
+SELECT	*
+FROM	productos
+
+
+
+-- 81: borrar todo el contenido de la tabla personas sin utilizar la instrucción delete.
+
+TRUNCATE TABLE personas
+
+drop table productos
+
+
+
 -- Variables
 
 /* declaracion, inicializacion e impresion */
 declare @nombre as nvarchar(20)
-set @nombre = 'Juan'
+set @nombre = 'Carla'
 --select @nombre /*muestra como resultado de query*/
 print @nombre/*muestra como mensaje*/
 
 /* condicional if */
 declare @nombre as nvarchar(20)
-set @nombre = 'Juan'
+set @nombre = 'Maria'
 if (@nombre = 'Juan')
 	begin
 		print 'Es Juan'
@@ -105,7 +254,7 @@ GO
 --Transacciones: se ejecutan como un bloque
 --si alguna sentencia falla, no se ejecuta nada del bloque
 
-BEGIN TRANSACTION
+BEGIN TRAN
 			update clientes
 			set categoria=categoria+1
 			where nombre='carlos'
@@ -170,6 +319,8 @@ BEGIN CATCH
 		PRINT 'fallo el proceso'
 END CATCH
 
+select * from clientes
+
 --Funciones
 --funciones escalares
 
@@ -214,7 +365,7 @@ drop function promedio_2
 
 -- funciones de tabla en linea
 
-CREATE FUNCTION autoresLibros(@cat varchar(30))
+alter FUNCTION autoresLibros(@cat varchar(30))
 returns table
 as
 	return (SELECT		a.au_id,
@@ -230,7 +381,8 @@ as
 			INNER JOIN	titleauthor ta
 			ON			a.au_id=ta.au_id
 			INNER JOIN	titles t
-			ON			ta.title_id=t.title_id)
+			ON			ta.title_id=t.title_id
+			WHERE		t.type = @cat)
 
 
 SELECT * FROM autoresLibros('business')
